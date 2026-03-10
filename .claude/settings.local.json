@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create vite@latest . -- --template react --yes)",
+      "Bash(npx create-vite@latest . --template react)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npm)"
+    ]
+  }
+}
