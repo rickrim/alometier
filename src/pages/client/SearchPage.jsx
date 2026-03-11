@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, SlidersHorizontal, Star, MapPin, Map, List, Phone, MessageCircle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
-import { mockProviders, getAllServices } from '../../data/mockProviders'
+import useProviderStore from '../../store/providerStore'
+import { getAllServices } from '../../data/mockProviders'
 import { cn } from '../../lib/utils'
 
 const SORT_OPTIONS = [
@@ -13,7 +14,10 @@ const SORT_OPTIONS = [
 
 export default function SearchPage() {
   const navigate = useNavigate()
+  const { providers, fetchProviders } = useProviderStore()
   const services = getAllServices()
+
+  useEffect(() => { fetchProviders() }, [])
 
   const [query, setQuery]           = useState('')
   const [serviceFilter, setService] = useState('Tous')
@@ -23,7 +27,7 @@ export default function SearchPage() {
   const [viewMode, setViewMode]     = useState('list') // 'list' | 'map'
 
   const filtered = useMemo(() => {
-    return mockProviders
+    return providers
       .filter((p) => {
         const matchQuery = !query ||
           p.nom.toLowerCase().includes(query.toLowerCase()) ||

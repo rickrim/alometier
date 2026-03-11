@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Star, MapPin, Phone, MessageCircle, CalendarCheck, Shield } from 'lucide-react'
-import { mockProviders } from '../../data/mockProviders'
+import useProviderStore from '../../store/providerStore'
 
 export default function ProviderDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const p = mockProviders.find((x) => x.id === id)
+  const p = useProviderStore((s) => s.getById(id))
 
   if (!p) {
     navigate('/client/recherche')

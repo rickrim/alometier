@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, MapPin, FileText, CheckCircle } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
 import useBookingStore from '../../store/bookingStore'
-import { mockProviders } from '../../data/mockProviders'
+import useProviderStore from '../../store/providerStore'
 
 const TIME_SLOTS = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00']
 
@@ -29,7 +29,7 @@ export default function BookingPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const addBooking = useBookingStore((s) => s.addBooking)
-  const provider = mockProviders.find((p) => p.id === id)
+  const provider = useProviderStore((s) => s.getById(id))
 
   const days = getTodayAndNext6()
   const [selectedDay, setSelectedDay] = useState(days[0].iso)

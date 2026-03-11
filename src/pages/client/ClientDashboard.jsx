@@ -1,8 +1,9 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, Search, Star, Map } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
 import useAuthStore from '../../store/authStore'
-import { mockProviders } from '../../data/mockProviders'
+import useProviderStore from '../../store/providerStore'
 
 const CATEGORIES = [
   { label: 'Ménage',      emoji: '🧹', service: 'Ménage' },
@@ -15,11 +16,14 @@ const CATEGORIES = [
   { label: 'Peinture',    emoji: '🖌️', service: 'Peinture' },
 ]
 
-const nearbyProviders = mockProviders.filter((p) => p.disponible).slice(0, 3)
-
 export default function ClientDashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const { providers, fetchProviders } = useProviderStore()
+
+  useEffect(() => { fetchProviders() }, [])
+
+  const nearbyProviders = providers.filter((p) => p.disponible).slice(0, 3)
 
   return (
     <AppLayout>

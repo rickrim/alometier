@@ -12,5 +12,5 @@ export const getSession = () => supabase.auth.getSession()
 // Convertit un numéro de téléphone en email fictif pour Supabase auth
 // Ex: "+228 90 11 22 33" → "22890112233@alometier.tg"
 export function phoneToEmail(phone) {
-  return phone.replace(/\D/g, '') + '@alometier.tg'
+  return phone.replace(/\D/g, '') + '@alometier.com'
 }

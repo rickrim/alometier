@@ -13,7 +13,8 @@ const useAuthStore = create(
       // ── Inscription ──────────────────────────────────────
       register: async (formData, type) => {
         set({ loading: true, error: null })
-        const email = formData.email?.trim() || phoneToEmail(formData.telephone)
+        // Toujours utiliser le téléphone pour l'auth Supabase (cohérence avec le login)
+        const email = phoneToEmail(formData.telephone)
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
@@ -23,6 +24,12 @@ const useAuthStore = create(
 
         const uid = authData.user?.id
         if (!uid) { set({ loading: false, error: 'Erreur création compte' }); return false }
+
+        // Connexion immédiate pour avoir une session valide (requis par RLS)
+        if (!authData.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: formData.password })
+          if (signInError) { set({ loading: false, error: signInError.message }); return false }
+        }
 
         const { error: profileError } = await supabase.from('profiles').insert({
           id: uid, type,
