@@ -105,10 +105,12 @@ export default function ProviderDetail() {
           className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
           <Phone className="w-5 h-5 text-gray-600" />
         </a>
-        <button className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+        <button onClick={() => navigate(`/client/chat/${p.id}`)}
+          className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
           <MessageCircle className="w-5 h-5 text-primary" />
         </button>
-        <button className="flex-1 bg-primary text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2">
+        <button onClick={() => navigate(`/client/reserver/${p.id}`)}
+          className="flex-1 bg-primary text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2">
           <CalendarCheck className="w-5 h-5" />
           Réserver maintenant
         </button>

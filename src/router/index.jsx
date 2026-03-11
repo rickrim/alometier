@@ -9,8 +9,12 @@ import ClientProfile from '../pages/client/ClientProfile'
 import SearchPage from '../pages/client/SearchPage'
 import MapPage from '../pages/client/MapPage'
 import ProviderDetail from '../pages/client/ProviderDetail'
+import BookingPage from '../pages/client/BookingPage'
+import BookingsPage from '../pages/client/BookingsPage'
 import ProviderDashboard from '../pages/provider/ProviderDashboard'
 import ProviderProfile from '../pages/provider/ProviderProfile'
+import DemandesPage from '../pages/provider/DemandesPage'
+import ChatPage from '../pages/ChatPage'
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -38,10 +42,15 @@ export default function AppRouter() {
         <Route path="/client/recherche" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
         <Route path="/client/carte" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
         <Route path="/client/prestataire/:id" element={<ProtectedRoute><ProviderDetail /></ProtectedRoute>} />
+        <Route path="/client/reserver/:id" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+        <Route path="/client/reservations" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
+        <Route path="/client/chat/:contactId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
 
         {/* Prestataire */}
         <Route path="/prestataire" element={<ProtectedRoute><ProviderDashboard /></ProtectedRoute>} />
         <Route path="/prestataire/profil" element={<ProtectedRoute><ProviderProfile /></ProtectedRoute>} />
+        <Route path="/prestataire/demandes" element={<ProtectedRoute><DemandesPage /></ProtectedRoute>} />
+        <Route path="/prestataire/chat/:contactId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
