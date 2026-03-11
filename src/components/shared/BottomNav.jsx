@@ -33,7 +33,7 @@ export default function BottomNav() {
   const tabs = isProvider ? providerTabs : clientTabs
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-gray-100 px-2 pb-safe z-50">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-gray-100 px-2 pb-safe z-[1001]">
       <div className="flex justify-around py-2">
         {tabs.map(({ label, icon: Icon, path, badge }) => {
           const active = location.pathname === path

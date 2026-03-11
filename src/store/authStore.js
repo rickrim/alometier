@@ -104,6 +104,40 @@ const useAuthStore = create(
         return true
       },
 
+      // ── Initialisation session au démarrage ───────────────
+      initSession: async () => {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          set({ user: null, isAuthenticated: false })
+          return
+        }
+        // Session valide mais user pas encore chargé (ex: page refresh)
+        const state = get()
+        if (!state.isAuthenticated || !state.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*, provider_profiles(*)')
+            .eq('id', session.user.id)
+            .single()
+          if (profile) {
+            const user = {
+              id: profile.id, type: profile.type,
+              nom: profile.nom, telephone: profile.telephone,
+              email: session.user.email, quartier: profile.quartier,
+              photo_url: profile.photo_url,
+              ...(profile.type === 'provider' && profile.provider_profiles && {
+                services: profile.provider_profiles.services,
+                zone: profile.provider_profiles.zone,
+                tarif: profile.provider_profiles.tarif,
+                description: profile.provider_profiles.description,
+                disponible: profile.provider_profiles.disponible,
+              }),
+            }
+            set({ user, isAuthenticated: true })
+          }
+        }
+      },
+
       // ── Déconnexion ───────────────────────────────────────
       logout: async () => {
         await supabase.auth.signOut()

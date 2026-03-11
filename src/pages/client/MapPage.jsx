@@ -4,7 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-le
 import L from 'leaflet'
 import { MapPin, Navigation, Star, X } from 'lucide-react'
 import useGeolocation from '../../hooks/useGeolocation'
-import { mockProviders } from '../../data/mockProviders'
+import useProviderStore from '../../store/providerStore'
+import BottomNav from '../../components/shared/BottomNav'
 import { cn } from '../../lib/utils'
 
 // Fix icônes Leaflet avec Vite
@@ -62,6 +63,10 @@ export default function MapPage() {
   const navigate = useNavigate()
   const { position, loading } = useGeolocation()
   const [selected, setSelected] = useState(null)
+  const { providers, fetchProviders } = useProviderStore()
+  const mapProviders = providers.filter((p) => p.lat && p.lng)
+
+  useEffect(() => { fetchProviders() }, [])
 
   if (loading) {
     return (
@@ -86,7 +91,7 @@ export default function MapPage() {
               <span>Lomé, Togo</span>
             </div>
           </div>
-          <p className="text-xs text-gray-400">{mockProviders.filter(p => p.disponible).length} prestataires disponibles près de vous</p>
+          <p className="text-xs text-gray-400">{mapProviders.filter(p => p.disponible).length} prestataires disponibles près de vous</p>
         </div>
       </div>
 
@@ -113,7 +118,7 @@ export default function MapPage() {
         />
 
         {/* Marqueurs prestataires */}
-        {mockProviders.map((p) => (
+        {mapProviders.map((p) => (
           <Marker
             key={p.id}
             position={[p.lat, p.lng]}
@@ -167,27 +172,7 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* Bottom nav */}
-      <div className="absolute bottom-0 left-0 right-0 z-[1000]">
-        <nav className="bg-white border-t border-gray-100 px-2 pb-safe">
-          <div className="flex justify-around py-2">
-            {[
-              { label: 'Accueil',   icon: '🏠', path: '/client' },
-              { label: 'Recherche', icon: '🔍', path: '/client/recherche' },
-              { label: 'Carte',     icon: '🗺️', path: '/client/carte', active: true },
-              { label: 'Profil',    icon: '👤', path: '/client/profil' },
-            ].map(({ label, icon, path, active }) => (
-              <button key={path} onClick={() => navigate(path)}
-                className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[60px]">
-                <span className="text-lg">{icon}</span>
-                <span className={cn('text-[10px] font-medium', active ? 'text-primary' : 'text-gray-400')}>
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </nav>
-      </div>
+      <BottomNav />
     </div>
   )
 }

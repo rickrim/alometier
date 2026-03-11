@@ -2,17 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, Phone } from 'lucide-react'
 import useAuthStore from '../store/authStore'
+import useProviderStore from '../store/providerStore'
 import { supabase } from '../lib/supabase'
-import { mockProviders } from '../data/mockProviders'
 import { cn } from '../lib/utils'
-
-function getContact(myType, contactId) {
-  if (myType === 'client') {
-    const p = mockProviders.find((p) => p.id === contactId)
-    return p ? { nom: p.nom, emoji: p.emoji, tel: p.telephone } : null
-  }
-  return { nom: 'Client', emoji: '👤', tel: '' }
-}
 
 function formatTime(iso) {
   const d = new Date(iso)
@@ -23,11 +15,19 @@ export default function ChatPage() {
   const { contactId } = useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const getById = useProviderStore((s) => s.getById)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef(null)
-  const contact = getContact(user?.type, contactId)
+
+  let contact = null
+  if (user?.type === 'client') {
+    const p = getById(contactId)
+    contact = p ? { nom: p.nom, emoji: p.emoji, tel: p.telephone } : null
+  } else {
+    contact = { nom: 'Client', emoji: '👤', tel: '' }
+  }
 
   // ── Charger l'historique ───────────────────────────────
   useEffect(() => {

@@ -23,7 +23,7 @@ function formatDate(iso) {
 export default function BookingsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { bookings, fetchBookings } = useBookingStore()
+  const { bookings, fetchBookings, updateStatus } = useBookingStore()
 
   useEffect(() => {
     if (user?.id) fetchBookings(user.id, 'client')
@@ -76,11 +76,19 @@ export default function BookingsPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-orange-50 text-primary text-xs font-medium rounded-xl">
                     <MessageCircle className="w-3.5 h-3.5" /> Discuter
                   </button>
-                  <button
-                    onClick={() => navigate(`/client/prestataire/${b.providerId}`)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-50 text-gray-600 text-xs font-medium rounded-xl">
-                    Voir profil <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                  {['pending', 'confirmed'].includes(b.status) ? (
+                    <button
+                      onClick={() => updateStatus(b.id, 'cancelled')}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 text-red-500 text-xs font-medium rounded-xl">
+                      <XCircle className="w-3.5 h-3.5" /> Annuler
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate(`/client/prestataire/${b.providerId}`)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-50 text-gray-600 text-xs font-medium rounded-xl">
+                      Voir profil <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             )

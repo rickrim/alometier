@@ -37,12 +37,22 @@ export default function BookingPage() {
   const [address, setAddress] = useState(user?.quartier || '')
   const [note, setNote] = useState('')
   const [confirmed, setConfirmed] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   if (!provider) { navigate(-1); return null }
 
+  const isMockProvider = !provider.id.includes('-')
+
   const handleConfirm = async () => {
-    if (!selectedTime) return
-    await addBooking({
+    if (!selectedTime || loading) return
+    if (isMockProvider) {
+      setError('Ce prestataire est une démo et ne peut pas être réservé. Cherchez un vrai prestataire.')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    const result = await addBooking({
       clientId: user.id,
       clientNom: user.nom,
       providerId: provider.id,
@@ -55,7 +65,9 @@ export default function BookingPage() {
       note,
       tarif: provider.tarif,
     })
-    setConfirmed(true)
+    setLoading(false)
+    if (result) setConfirmed(true)
+    else setError('Erreur lors de la réservation. Vérifiez votre connexion et réessayez.')
   }
 
   if (confirmed) {
@@ -170,11 +182,14 @@ export default function BookingPage() {
 
       {/* Bouton confirmer */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-gray-100 px-4 py-4">
-        <button onClick={handleConfirm} disabled={!selectedTime}
+        {error && (
+          <p className="text-red-500 text-xs text-center mb-2">{error}</p>
+        )}
+        <button onClick={handleConfirm} disabled={!selectedTime || loading}
           className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
-            selectedTime ? 'bg-primary active:scale-95' : 'bg-gray-300 cursor-not-allowed'
+            selectedTime && !loading ? 'bg-primary active:scale-95' : 'bg-gray-300 cursor-not-allowed'
           }`}>
-          Confirmer la réservation
+          {loading ? 'Envoi en cours...' : 'Confirmer la réservation'}
         </button>
       </div>
     </div>

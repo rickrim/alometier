@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, SlidersHorizontal, Star, MapPin, Map, List, Phone, MessageCircle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
 import useProviderStore from '../../store/providerStore'
@@ -14,13 +14,14 @@ const SORT_OPTIONS = [
 
 export default function SearchPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { providers, fetchProviders } = useProviderStore()
   const services = getAllServices()
 
   useEffect(() => { fetchProviders() }, [])
 
   const [query, setQuery]           = useState('')
-  const [serviceFilter, setService] = useState('Tous')
+  const [serviceFilter, setService] = useState(searchParams.get('service') || 'Tous')
   const [sortBy, setSort]           = useState('distance')
   const [disponibleOnly, setDispo]  = useState(false)
   const [showFilters, setShowFilters] = useState(false)
