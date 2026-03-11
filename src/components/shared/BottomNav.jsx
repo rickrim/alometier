@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Home, Search, CalendarCheck, User } from 'lucide-react'
+import { Home, Search, Map, CalendarCheck, User } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
 import { cn } from '../../lib/utils'
 
@@ -7,14 +7,23 @@ export default function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
-  const base = user?.type === 'provider' ? '/prestataire' : '/client'
+  const isProvider = user?.type === 'provider'
+  const base = isProvider ? '/prestataire' : '/client'
 
-  const tabs = [
-    { label: 'Accueil',      icon: Home,          path: base },
-    { label: 'Recherche',    icon: Search,         path: `${base}/recherche` },
-    { label: 'Réservations', icon: CalendarCheck,  path: `${base}/reservations` },
-    { label: 'Profil',       icon: User,           path: `${base}/profil` },
+  const clientTabs = [
+    { label: 'Accueil',   icon: Home,         path: base },
+    { label: 'Recherche', icon: Search,        path: `${base}/recherche` },
+    { label: 'Carte',     icon: Map,           path: `${base}/carte` },
+    { label: 'Profil',    icon: User,          path: `${base}/profil` },
   ]
+
+  const providerTabs = [
+    { label: 'Accueil',      icon: Home,         path: base },
+    { label: 'Demandes',     icon: CalendarCheck, path: `${base}/demandes` },
+    { label: 'Profil',       icon: User,          path: `${base}/profil` },
+  ]
+
+  const tabs = isProvider ? providerTabs : clientTabs
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-gray-100 px-2 pb-safe">

@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "alometier-dev",
-      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5173
+      "runtimeExecutable": "C:/Program Files/nodejs/node.exe",
+      "runtimeArgs": ["E:/Claude/AloMetier/node_modules/vite/bin/vite.js", "--host", "--port", "3001"],
+      "port": 3001,
+      "autoPort": false
     }
   ]
 }

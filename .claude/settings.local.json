@@ -4,7 +4,22 @@
       "Bash(npm create vite@latest . -- --template react --yes)",
       "Bash(npx create-vite@latest . --template react)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(where npm)"
+      "Bash(where npm)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5173)",
+      "Bash(taskkill /PID 16440 /F)",
+      "Bash(cmd /c \"taskkill /PID 16440 /F\")",
+      "Bash(cmd /c \"where node\")",
+      "Bash(cmd /c \"for %i in \\(\"\"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\"\"\\) do echo %~si\")",
+      "Bash(cmd /c \"netstat -ano | findstr :5173\")",
+      "Bash(cmd /c \"dir /x E:\\\\Claude\"\")",
+      "Bash(cmd /c \"cd E:\\\\Claude && dir /x\")",
+      "Bash(iconv -f cp850 -t utf-8)",
+      "Bash(cmd /c \"rename \"\"E:\\\\Claude\\\\AloMétier\"\" AloMetier\")",
+      "Bash(powershell -Command \"New-Item -ItemType Junction -Path ''E:\\\\Claude\\\\AloMetier'' -Target ''E:\\\\Claude\\\\AloMétier''\")",
+      "Bash(cmd /c \"netstat -ano | findstr :5174\")",
+      "Bash(npm install leaflet react-leaflet)",
+      "Bash(npm install leaflet react-leaflet --legacy-peer-deps)"
     ]
   }
 }
