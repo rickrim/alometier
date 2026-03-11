@@ -17,14 +17,14 @@ export default function ProviderDetail() {
       {/* Header image / avatar */}
       <div className="relative bg-primary h-52 flex items-end">
         <button onClick={() => navigate(-1)}
-          className="absolute top-12 left-4 w-9 h-9 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
+          className="absolute top-12 left-4 z-10 w-9 h-9 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-7xl">{p.emoji}</div>
         </div>
         {/* Badge disponibilité */}
-        <div className="absolute top-12 right-4">
+        <div className="absolute top-12 right-4 z-10">
           <span className={`text-xs font-medium px-3 py-1 rounded-full ${p.disponible ? 'bg-green-400 text-white' : 'bg-gray-400 text-white'}`}>
             {p.disponible ? '● Disponible' : '● Indisponible'}
           </span>

@@ -41,18 +41,27 @@ const useBookingStore = create((set, get) => ({
 
     const { data, error } = await supabase
       .from('bookings')
-      .select('*, client:profiles!bookings_client_id_fkey(nom), provider:profiles!bookings_provider_id_fkey(nom)')
+      .select('*')
       .eq(field, userId)
       .order('created_at', { ascending: false })
 
     if (error) { console.error(error); set({ loading: false }); return }
 
+    // Récupérer les noms des profils séparément
+    const ids = [...new Set((data || []).flatMap((b) => [b.client_id, b.provider_id].filter(Boolean)))]
+    let profileMap = {}
+    if (ids.length > 0) {
+      const { data: profiles } = await supabase.from('profiles').select('id, nom').in('id', ids)
+      profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p.nom]))
+    }
+
     const enriched = (data || []).map((b) => ({
       ...b,
       clientId:    b.client_id,
       providerId:  b.provider_id,
-      clientNom:   b.client?.nom || 'Client',
-      providerNom: b.provider?.nom || 'Prestataire',
+      clientNom:   profileMap[b.client_id]  || 'Client',
+      providerNom: profileMap[b.provider_id] || 'Prestataire',
+      providerEmoji: '👤',
     }))
 
     set({ bookings: enriched, loading: false })

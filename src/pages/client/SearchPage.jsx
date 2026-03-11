@@ -149,8 +149,9 @@ export default function SearchPage() {
 }
 
 function ProviderCard({ provider: p, onClick }) {
+  const navigate = useNavigate()
   return (
-    <div className="card active:scale-[0.99] transition-transform" onClick={onClick}>
+    <div className="card cursor-pointer active:scale-[0.99] transition-transform" onClick={onClick}>
       <div className="flex gap-3">
         {/* Avatar */}
         <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">
@@ -195,7 +196,7 @@ function ProviderCard({ provider: p, onClick }) {
           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-50 rounded-xl text-xs font-medium text-gray-600 active:bg-gray-100">
           <Phone className="w-3.5 h-3.5" /> Appeler
         </a>
-        <button onClick={(e) => { e.stopPropagation() }}
+        <button onClick={(e) => { e.stopPropagation(); navigate(`/client/chat/${p.id}`) }}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-orange-50 rounded-xl text-xs font-medium text-primary active:bg-orange-100">
           <MessageCircle className="w-3.5 h-3.5" /> Discuter
         </button>
