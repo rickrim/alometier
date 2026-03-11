@@ -2,34 +2,36 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
+import { cn } from '../../lib/utils'
 
 export default function Login() {
   const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
+  const { login, loading, error, clearError } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({ telephone: '', password: '' })
-  const [error, setError] = useState('')
+  const [localError, setLocalError] = useState('')
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    clearError()
+    setLocalError('')
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.telephone || !form.password) {
-      setError('Veuillez remplir tous les champs')
+      setLocalError('Veuillez remplir tous les champs')
       return
     }
-    // Mock : accepter n'importe quel login pour le MVP
-    // On détermine le type selon un préfixe fictif (à remplacer par API)
-    const isProvider = form.telephone.startsWith('0')
-    login({
-      id: Date.now().toString(),
-      type: isProvider ? 'provider' : 'client',
-      nom: 'Utilisateur',
-      telephone: form.telephone,
-    })
-    navigate(isProvider ? '/prestataire' : '/client')
+    const ok = await login(form.telephone, form.password)
+    if (ok) {
+      // La redirection se fait via le GuestRoute → ProtectedRoute dans le router
+      const user = useAuthStore.getState().user
+      navigate(user?.type === 'provider' ? '/prestataire' : '/client')
+    }
   }
+
+  const displayError = localError || error
 
   return (
     <div className="app-container flex flex-col min-h-screen">
@@ -65,14 +67,15 @@ export default function Login() {
           Mot de passe oublié ?
         </button>
 
-        {error && (
+        {displayError && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
-            {error}
+            {displayError}
           </div>
         )}
 
-        <button type="submit" className="btn-primary mt-2">
-          Se connecter
+        <button type="submit" disabled={loading}
+          className={cn('btn-primary mt-2', loading && 'opacity-60 cursor-not-allowed')}>
+          {loading ? 'Connexion...' : 'Se connecter'}
         </button>
 
         <p className="text-center text-gray-500 text-sm mt-auto">

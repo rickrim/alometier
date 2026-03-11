@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { CalendarCheck, Clock, CheckCircle, XCircle, ChevronRight, MessageCircle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
 import useAuthStore from '../../store/authStore'
@@ -22,8 +23,11 @@ function formatDate(iso) {
 export default function BookingsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { getClientBookings } = useBookingStore()
-  const bookings = getClientBookings(user?.id)
+  const { bookings, fetchBookings } = useBookingStore()
+
+  useEffect(() => {
+    if (user?.id) fetchBookings(user.id, 'client')
+  }, [user?.id])
 
   return (
     <AppLayout title="Mes réservations">

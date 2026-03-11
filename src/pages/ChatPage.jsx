@@ -2,21 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, Phone } from 'lucide-react'
 import useAuthStore from '../store/authStore'
-import useChatStore from '../store/chatStore'
+import { supabase } from '../lib/supabase'
 import { mockProviders } from '../data/mockProviders'
 import { cn } from '../lib/utils'
-
-// Noms fictifs pour les clients (côté prestataire)
-const MOCK_CLIENTS = {
-  default: { nom: 'Client', emoji: '👤' }
-}
 
 function getContact(myType, contactId) {
   if (myType === 'client') {
     const p = mockProviders.find((p) => p.id === contactId)
     return p ? { nom: p.nom, emoji: p.emoji, tel: p.telephone } : null
   }
-  return MOCK_CLIENTS[contactId] || { nom: 'Client', emoji: '👤', tel: '' }
+  return { nom: 'Client', emoji: '👤', tel: '' }
 }
 
 function formatTime(iso) {
@@ -24,57 +19,78 @@ function formatTime(iso) {
   return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`
 }
 
-// Messages de démo pré-chargés
-const DEMO_MESSAGES = (providerId, clientId) => [
-  {
-    id: 'demo1',
-    senderId: providerId,
-    text: 'Bonjour ! Je suis disponible pour votre demande. De quoi avez-vous besoin exactement ?',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    read: true,
-  },
-  {
-    id: 'demo2',
-    senderId: clientId,
-    text: 'Bonjour ! J\'ai besoin d\'un nettoyage complet de mon appartement, 3 pièces.',
-    createdAt: new Date(Date.now() - 3500000).toISOString(),
-    read: true,
-  },
-  {
-    id: 'demo3',
-    senderId: providerId,
-    text: 'Très bien, je peux venir demain matin. Quel est votre quartier ?',
-    createdAt: new Date(Date.now() - 3400000).toISOString(),
-    read: true,
-  },
-]
-
 export default function ChatPage() {
   const { contactId } = useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { getMessages, sendMessage, markRead } = useChatStore()
-
+  const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
+  const [loading, setLoading] = useState(true)
   const bottomRef = useRef(null)
   const contact = getContact(user?.type, contactId)
 
-  // Pré-charger messages démo si conversation vide
-  const storeMessages = getMessages(user?.id, contactId)
-  const messages = storeMessages.length > 0
-    ? storeMessages
-    : DEMO_MESSAGES(contactId, user?.id)
-
+  // ── Charger l'historique ───────────────────────────────
   useEffect(() => {
-    markRead(user?.id, contactId, user?.id)
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
+    if (!user?.id) return
 
-  const handleSend = () => {
-    if (!text.trim()) return
-    sendMessage(user.id, contactId, text.trim())
+    const fetchMessages = async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`)
+        .order('created_at', { ascending: true })
+
+      if (data && data.length > 0) {
+        setMessages(data)
+      } else {
+        // Messages de démo si conversation vide
+        setMessages([
+          { id: 'd1', sender_id: contactId, text: 'Bonjour ! Je suis disponible pour votre demande. De quoi avez-vous besoin ?', created_at: new Date(Date.now()-3600000).toISOString(), read: true },
+          { id: 'd2', sender_id: user.id,   text: "Bonjour ! J'ai besoin d'un nettoyage complet, 3 pièces.", created_at: new Date(Date.now()-3500000).toISOString(), read: true },
+          { id: 'd3', sender_id: contactId, text: 'Très bien, je peux venir demain matin. Quel est votre quartier ?', created_at: new Date(Date.now()-3400000).toISOString(), read: true },
+        ])
+      }
+      setLoading(false)
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
+
+    fetchMessages()
+
+    // ── Realtime subscription ──────────────────────────────
+    const channel = supabase
+      .channel(`chat:${[user.id, contactId].sort().join('_')}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${user.id}`,
+      }, (payload) => {
+        if (payload.new.sender_id === contactId) {
+          setMessages((prev) => [...prev, payload.new])
+          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [user?.id, contactId])
+
+  // ── Envoyer un message ─────────────────────────────────
+  const handleSend = async () => {
+    if (!text.trim() || !user?.id) return
+    const newMsg = {
+      sender_id: user.id,
+      receiver_id: contactId,
+      text: text.trim(),
+      read: false,
+      created_at: new Date().toISOString(),
+    }
     setText('')
+    setMessages((prev) => [...prev, { ...newMsg, id: `tmp_${Date.now()}` }])
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+
+    // Persister en base (si vrai utilisateur Supabase)
+    await supabase.from('messages').insert(newMsg)
   }
 
   const handleKey = (e) => {
@@ -106,33 +122,41 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-50 flex flex-col gap-2">
-        {messages.map((m, i) => {
-          const isMe = m.senderId === user?.id
-          const showTime = i === 0 || new Date(m.createdAt) - new Date(messages[i-1].createdAt) > 300000
-          return (
-            <div key={m.id}>
-              {showTime && (
-                <div className="text-center text-[10px] text-gray-400 my-2">
-                  {formatTime(m.createdAt)}
-                </div>
-              )}
-              <div className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
-                <div className={cn(
-                  'max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
-                  isMe
-                    ? 'bg-primary text-white rounded-br-sm'
-                    : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
-                )}>
-                  {m.text}
-                  <div className={cn('text-[10px] mt-0.5 text-right', isMe ? 'text-orange-200' : 'text-gray-400')}>
-                    {formatTime(m.createdAt)}
-                    {isMe && <span className="ml-1">{m.read ? '✓✓' : '✓'}</span>}
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+            Chargement...
+          </div>
+        ) : (
+          messages.map((m, i) => {
+            const isMe = m.sender_id === user?.id
+            const showTime = i === 0 ||
+              new Date(m.created_at) - new Date(messages[i-1].created_at) > 300000
+            return (
+              <div key={m.id}>
+                {showTime && (
+                  <div className="text-center text-[10px] text-gray-400 my-2">
+                    {formatTime(m.created_at)}
+                  </div>
+                )}
+                <div className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
+                  <div className={cn(
+                    'max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
+                    isMe
+                      ? 'bg-primary text-white rounded-br-sm'
+                      : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
+                  )}>
+                    {m.text}
+                    <div className={cn('text-[10px] mt-0.5 text-right',
+                      isMe ? 'text-orange-200' : 'text-gray-400')}>
+                      {formatTime(m.created_at)}
+                      {isMe && <span className="ml-1">{m.read ? '✓✓' : '✓'}</span>}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -143,7 +167,6 @@ export default function ChatPage() {
           placeholder="Écrire un message..."
           rows={1}
           className="flex-1 bg-gray-100 rounded-2xl px-4 py-2.5 text-sm outline-none resize-none max-h-24 placeholder:text-gray-400"
-          style={{ lineHeight: '1.4' }}
         />
         <button onClick={handleSend} disabled={!text.trim()}
           className={cn(

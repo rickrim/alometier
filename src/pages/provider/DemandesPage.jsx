@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { CalendarCheck, Clock, CheckCircle, XCircle, MessageCircle } from 'lucide-react'
 import AppLayout from '../../components/shared/AppLayout'
 import useAuthStore from '../../store/authStore'
@@ -22,8 +23,11 @@ function formatDate(iso) {
 export default function DemandesPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { getProviderBookings, updateStatus } = useBookingStore()
-  const bookings = getProviderBookings(user?.id)
+  const { bookings, fetchBookings, updateStatus } = useBookingStore()
+
+  useEffect(() => {
+    if (user?.id) fetchBookings(user.id, 'provider')
+  }, [user?.id])
 
   const pending  = bookings.filter((b) => b.status === 'pending')
   const others   = bookings.filter((b) => b.status !== 'pending')

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, Camera } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
+import { cn } from '../../lib/utils'
 
 const SERVICES = [
   'Ménage', 'Blanchisserie / Repassage', 'Plomberie', 'Électricité',
@@ -13,7 +14,7 @@ const SERVICES = [
 export default function Register() {
   const { type } = useParams()
   const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
+  const { register, loading, error, clearError } = useAuthStore()
   const isProvider = type === 'prestataire'
 
   const [showPassword, setShowPassword] = useState(false)
@@ -24,8 +25,10 @@ export default function Register() {
   })
   const [errors, setErrors] = useState({})
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    clearError()
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  }
 
   const toggleService = (s) =>
     setSelectedServices((prev) =>
@@ -42,25 +45,14 @@ export default function Register() {
     return Object.keys(e).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-    login({
-      id: Date.now().toString(),
-      type: isProvider ? 'provider' : 'client',
-      nom: form.nom,
-      telephone: form.telephone,
-      email: form.email,
-      quartier: form.quartier,
-      ...(isProvider && {
-        services: selectedServices,
-        zone: form.zone,
-        tarif: form.tarif,
-        description: form.description,
-        disponible: true,
-      })
-    })
-    navigate(isProvider ? '/prestataire' : '/client')
+    const formData = { ...form, services: selectedServices }
+    const ok = await register(formData, isProvider ? 'provider' : 'client')
+    if (ok) {
+      navigate(isProvider ? '/prestataire' : '/client')
+    }
   }
 
   return (
@@ -173,8 +165,15 @@ export default function Register() {
           </>
         )}
 
-        <button type="submit" className="btn-primary mt-2">
-          S'inscrire
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+            {error}
+          </div>
+        )}
+
+        <button type="submit" disabled={loading}
+          className={cn('btn-primary mt-2', loading && 'opacity-60 cursor-not-allowed')}>
+          {loading ? 'Création du compte...' : "S'inscrire"}
         </button>
 
         <p className="text-center text-gray-500 text-sm">

@@ -40,9 +40,9 @@ export default function BookingPage() {
 
   if (!provider) { navigate(-1); return null }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedTime) return
-    addBooking({
+    await addBooking({
       clientId: user.id,
       clientNom: user.nom,
       providerId: provider.id,
